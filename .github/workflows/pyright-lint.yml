@@ -1,0 +1,27 @@
+name: Lint with Pyright
+
+on:
+  push:
+    paths:
+      - 'src/**.py'
+  pull_request:
+    paths:
+      - 'src/**.py'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        fetch-tags: true
+    - uses: actions/setup-python@v5
+      with:
+        cache: pip
+        cache-dependency-path: pyproject.toml
+        python-version: '3.11'
+    - run: pip install pyright
+    - run: pip install .[tests]
+    - run: pyright
