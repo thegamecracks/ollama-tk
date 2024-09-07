@@ -1,3 +1,4 @@
+import asyncio
 import json
 from typing import Any, Literal, TypedDict, cast
 
@@ -95,6 +96,10 @@ async def generate_chat_completion(
 
                 target.refresh()
 
+    except asyncio.CancelledError:
+        show_error("(Response cancelled)")
+        hide_source()
+        raise
     except httpx.ConnectError:
         show_error("Could not connect to the given address. Is the server running?")
         hide_source()

@@ -14,6 +14,8 @@ if TYPE_CHECKING:
 
 
 class TkChat(Frame):
+    chat_fut: Future | None
+
     def __init__(self, app: TkApp) -> None:
         super().__init__(app)
 
@@ -21,7 +23,7 @@ class TkChat(Frame):
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=7)
-        self.grid_rowconfigure(2, weight=1)
+        self.grid_rowconfigure(3, weight=1)
 
         self.settings = Settings()
 
@@ -29,10 +31,16 @@ class TkChat(Frame):
         self.settings_controls.grid(row=0, column=0, sticky="e", padx=10, pady=(10, 0))
 
         self.message_list = TkMessageList(self)
-        self.message_list.grid(row=1, column=0, sticky="nesw", padx=10, pady=10)
+        self.message_list.grid(row=1, column=0, sticky="nesw", padx=10, pady=(10, 0))
+
+        self.live_controls = TkLiveControls(self)
+        self.live_controls.grid(row=2, column=0, sticky="w", padx=10, pady=(10, 0))
+        self.live_controls.grid_remove()  # Show later when necessary
 
         self.chat_controls = TkChatControls(self)
-        self.chat_controls.grid(row=2, column=0, sticky="nesw", padx=10, pady=(0, 10))
+        self.chat_controls.grid(row=3, column=0, sticky="nesw", padx=10, pady=10)
+
+        self.chat_fut = None
 
     def send_chat(self, *, source: TkMessageFrame | None) -> None:
         message = Message("assistant", "Waiting for response...")
@@ -47,16 +55,20 @@ class TkChat(Frame):
             messages=self.message_list.dump(),
         )
 
-        fut = self.app.event_thread.submit(coro)
+        fut = self.chat_fut = self.app.event_thread.submit(coro)
         fut.add_done_callback(self._on_send_chat_done)
 
         self.settings_controls.disable()
         self.chat_controls.disable()
+        self.live_controls.show()
 
     def _on_send_chat_done(self, fut: Future[Any]) -> None:
         self.settings_controls.enable()
+        self.live_controls.grid_remove()
         self.chat_controls.enable()
-        fut.result()  # If an error occurred, print it
+
+        if not fut.cancelled():
+            fut.result()  # If an error occurred, print it
 
     def maybe_get_models(self) -> None:
         # FIXME: update models any time address is changed
@@ -102,6 +114,27 @@ class TkChatControls(Frame):
         self.text.bind("<Shift-Return>", lambda event: self.text.insert("insert", "\n"))
         self.text.unbind_all("<Return>")
         self.text.bind("<Return>", lambda event: self.buttons.do_send())
+
+
+class TkLiveControls(Frame):
+    def __init__(self, chat: TkChat) -> None:
+        super().__init__(chat)
+
+        self.chat = chat
+
+        self.grid_columnconfigure(0, weight=1)
+
+        self.cancel = Button(self, command=self.do_cancel, text="Cancel")
+        self.cancel.grid(row=0, column=0)
+
+    def do_cancel(self) -> None:
+        if self.chat.chat_fut is not None:
+            self.chat.chat_fut.cancel()
+            self.cancel.state(["disabled"])
+
+    def show(self) -> None:
+        self.cancel.state(["!disabled"])
+        self.grid()
 
 
 class TkChatButtons(Frame):
