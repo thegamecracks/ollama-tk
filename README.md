@@ -23,3 +23,8 @@ python -m ollamatk
 ## License
 
 This project is written under the MIT license.
+
+This application uses [Material Design Icons] which is licensed under
+[Apache 2.0](https://github.com/google/material-design-icons/blob/master/LICENSE).
+
+[Material Design Icons]: https://icon-sets.iconify.design/material-symbols/person/
