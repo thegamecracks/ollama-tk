@@ -6,6 +6,7 @@ from tkinter import PhotoImage
 from tkinter.ttk import Frame, Label
 from typing import TYPE_CHECKING, Any, Literal
 
+from .scrollable_frame import ScrollableFrame
 from .wrap_label import WrapLabel
 
 if TYPE_CHECKING:
@@ -32,7 +33,7 @@ class TkMessageFrame(Frame):
         *,
         side: Literal["left", "right"],
     ) -> None:
-        super().__init__(message_list)
+        super().__init__(message_list.inner)
 
         self.message = message
         self.message_list = message_list
@@ -73,16 +74,16 @@ class TkMessageFrame(Frame):
         self.message_list.messages.remove(self)
 
 
-class TkMessageList(Frame):
+class TkMessageList(ScrollableFrame):
     messages: list[TkMessageFrame]
 
     def __init__(self, chat: TkChat) -> None:
-        super().__init__(chat)
+        super().__init__(chat, autoscroll=True, yscroll=True)
 
         self.chat = chat
         self.messages = []
 
-        self.grid_columnconfigure(0, weight=1)
+        self.inner.grid_columnconfigure(0, weight=1)
 
         self.icons = load_message_icons()
 
@@ -96,6 +97,9 @@ class TkMessageList(Frame):
     def refresh(self) -> None:
         for message in self.messages:
             message.refresh()
+
+    def scroll_to_bottom(self) -> None:
+        self._ScrollableFrame__canvas.yview_moveto(1)  # type: ignore
 
     def clear(self) -> None:
         for message in self.messages.copy():
