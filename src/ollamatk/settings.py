@@ -35,7 +35,6 @@ class TkSettingsControls(Frame):
         self.model_var.set(self.settings.ollama_model)
 
     def set_model_options(self, options: list[str]) -> None:
-        # TODO: GET /api/tags and set_model_options()
         self.model.configure(values=options)
 
     def disable(self) -> None:
