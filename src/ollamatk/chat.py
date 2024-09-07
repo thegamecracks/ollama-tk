@@ -63,8 +63,8 @@ class TkChat(Frame):
         fut.add_done_callback(self._on_send_chat_done)
 
         self.settings_controls.disable()
-        self.chat_controls.disable()
         self.live_controls.show()
+        self.chat_controls.disable()
 
     def _on_send_chat_done(self, fut: Future[Any]) -> None:
         self.settings_controls.enable()
