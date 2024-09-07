@@ -40,6 +40,19 @@ async def generate_chat_completion(
     model: str,
     messages: list[dict[str, Any]],
 ) -> None:
+    def show_error(message: str) -> None:
+        if append_errors:
+            target.message.content += f"...\n\n{message}"
+        else:
+            target.message.content = message
+        target.refresh()
+
+    def hide_source() -> None:
+        # Make sure a followup chat doesn't remember the last message that failed
+        if source is not None:
+            source.message.hidden = True
+            source.refresh()
+
     if not target.message.hidden:
         raise ValueError("target message must be initially hidden")
 
@@ -75,23 +88,13 @@ async def generate_chat_completion(
 
                 target.refresh()
 
+    except httpx.ConnectError:
+        show_error("Could not connect to the given address. Is the server running?")
+        hide_source()
     except Exception:
         # TODO: show more detailed error messages
-        if append_errors:
-            target.message.content += (
-                "...\n\nAn error occurred on the server. Please try again."
-            )
-        else:
-            target.message.content = (
-                "An error occurred while sending the request. Please try again."
-            )
-        target.refresh()
-
-        if source is not None:
-            # Make sure a followup chat doesn't remember the last message that failed
-            source.message.hidden = True
-            source.refresh()
-
+        show_error("An unknown error occurred. Please try again.")
+        hide_source()
         raise
     else:
         target.message.hidden = False
