@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import concurrent.futures
 from tkinter import Text
 from tkinter.ttk import Button, Frame
 from typing import TYPE_CHECKING
 
-from .messages import Message, TkMessageList
+from .http import generate_chat_completion
+from .messages import Message, TkMessageFrame, TkMessageList
 from .settings import Settings, TkSettingsControls
 
 if TYPE_CHECKING:
@@ -31,6 +33,30 @@ class TkChat(Frame):
 
         self.chat_controls = TkChatControls(self)
         self.chat_controls.grid(row=2, column=0, sticky="nesw", padx=10, pady=(0, 10))
+
+    def send_chat(self, *, source: TkMessageFrame | None) -> None:
+        message = Message("assistant", "Waiting for response...")
+        frame = self.message_list.add_message(message)
+        frame.message.hidden = True
+
+        coro = generate_chat_completion(
+            target=frame,
+            source=source,
+            address=self.settings.ollama_address,
+            model=self.settings.ollama_model,
+            messages=self.message_list.dump(),
+        )
+
+        fut = self.app.event_thread.submit(coro)
+        fut.add_done_callback(self._on_send_chat_done)
+
+        self.settings_controls.disable()
+        self.chat_controls.disable()
+
+    def _on_send_chat_done(self, fut: concurrent.futures.Future) -> None:
+        self.settings_controls.enable()
+        self.chat_controls.enable()
+        fut.result()  # If an error occurred, print it
 
 
 class TkChatControls(Frame):
@@ -84,9 +110,9 @@ class TkChatButtons(Frame):
             return
 
         message = Message("user", content)
-        self.controls.chat.message_list.add_message(message)
+        message = self.controls.chat.message_list.add_message(message)
         self.controls.text.delete("1.0", "end")
-        # TODO: disable controls and perform I/O, include timeout
+        self.controls.chat.send_chat(source=message)
 
     def do_clear(self) -> None:
         self.controls.chat.message_list.clear()

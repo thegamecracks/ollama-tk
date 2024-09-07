@@ -4,7 +4,7 @@ import importlib.resources
 from dataclasses import dataclass
 from tkinter import PhotoImage
 from tkinter.ttk import Frame, Label
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from .wrap_label import WrapLabel
 
@@ -18,6 +18,10 @@ Role = Literal["system", "user", "assistant", "tool"]
 class Message:
     role: Role
     content: str
+    hidden: bool = False
+
+    def dump(self) -> dict[str, Any]:
+        return {"role": self.role, "content": self.content}
 
 
 class TkMessageFrame(Frame):
@@ -96,6 +100,13 @@ class TkMessageList(Frame):
     def clear(self) -> None:
         for message in self.messages.copy():
             message.destroy()  # NOTE: this is O(n^2)
+
+    def dump(self, *, include_hidden: bool = False) -> list[dict[str, Any]]:
+        return [
+            frame.message.dump()
+            for frame in self.messages
+            if include_hidden or not frame.message.hidden
+        ]
 
 
 def load_message_icons() -> dict[str, PhotoImage]:
