@@ -130,9 +130,6 @@ class TkChatButtons(Frame):
         self.controls.chat.send_chat(source=message)
         self.controls.chat.maybe_get_models()
 
-        scroll = self.controls.chat.message_list.scroll_to_bottom
-        self.after(100, scroll)  # HACK: need to wait before scrolling
-
     def do_clear(self) -> None:
         self.controls.chat.message_list.clear()
 

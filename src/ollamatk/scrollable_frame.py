@@ -1,6 +1,7 @@
 # https://gist.github.com/thegamecracks/ee5614aa932c2167918a3c3dcc013710
 from tkinter import Canvas, Event, Widget
 from tkinter.ttk import Frame, Scrollbar, Style
+from typing import Literal
 from weakref import WeakSet
 
 
@@ -37,8 +38,8 @@ class ScrollableFrame(Frame):
 
         self.__xscrollbar["command"] = self.__canvas.xview
         self.__yscrollbar["command"] = self.__canvas.yview
-        self.__canvas["xscrollcommand"] = self.__wrap_scrollbar_set(self.__xscrollbar)
-        self.__canvas["yscrollcommand"] = self.__wrap_scrollbar_set(self.__yscrollbar)
+        self.__canvas["xscrollcommand"] = self.__wrap_scrollbar_set("x")
+        self.__canvas["yscrollcommand"] = self.__wrap_scrollbar_set("y")
 
         self.inner = Frame(self.__canvas)
         self.__inner_id = self.__canvas.create_window(
@@ -81,8 +82,8 @@ class ScrollableFrame(Frame):
         self.__canvas.configure(scrollregion=bbox)
         self.__canvas.itemconfigure(self.__inner_id, width=new_width, height=new_height)
 
-        self.__update_scrollbar_visibility(self.__xscrollbar)
-        self.__update_scrollbar_visibility(self.__yscrollbar)
+        self.__update_scrollbar_visibility("x")
+        self.__update_scrollbar_visibility("y")
         self.__propagate_scroll_binds(self.inner)
         self.__update_scroll_edges(bbox, *scroll_edges)
 
@@ -127,15 +128,26 @@ class ScrollableFrame(Frame):
         delta = int(-event.delta / 100)
         self.__canvas.yview_scroll(delta, "units")
 
-    def __update_scrollbar_visibility(self, scrollbar: Scrollbar):
+    def __update_scrollbar_visibility(self, axis: Literal["x", "y"]):
+        scrollbar = self.__get_scrollbar_from_axis(axis)
         if scrollbar.get() == (0, 1):
             scrollbar.grid_remove()
-        else:
-            scrollbar.grid()
+            return
 
-    def __wrap_scrollbar_set(self, scrollbar: Scrollbar):
+        scrollbar.grid()
+        if self.autoscroll:
+            if axis == "x":
+                self.__canvas.xview_moveto(1)
+            else:
+                self.__canvas.yview_moveto(1)
+
+    def __wrap_scrollbar_set(self, axis: Literal["x", "y"]):
         def wrapper(*args, **kwargs):
             scrollbar.set(*args, **kwargs)
-            self.__update_scrollbar_visibility(scrollbar)
+            self.__update_scrollbar_visibility(axis)
 
+        scrollbar = self.__get_scrollbar_from_axis(axis)
         return wrapper
+
+    def __get_scrollbar_from_axis(self, axis: Literal["x", "y"]) -> Scrollbar:
+        return self.__xscrollbar if axis == "x" else self.__yscrollbar

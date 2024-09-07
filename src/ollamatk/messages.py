@@ -98,9 +98,6 @@ class TkMessageList(ScrollableFrame):
         for message in self.messages:
             message.refresh()
 
-    def scroll_to_bottom(self) -> None:
-        self._ScrollableFrame__canvas.yview_moveto(1)  # type: ignore
-
     def clear(self) -> None:
         for message in self.messages.copy():
             message.destroy()  # NOTE: this is O(n^2)
