@@ -45,7 +45,6 @@ class TkChat(Frame):
     def send_chat(self, *, source: TkMessageFrame | None) -> None:
         message = Message("assistant", "Waiting for response...")
         frame = self.message_list.add_message(message)
-        frame.message.hidden = True
 
         coro = generate_chat_completion(
             target=frame,

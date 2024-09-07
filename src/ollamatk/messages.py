@@ -62,7 +62,8 @@ class TkMessageFrame(Frame):
         self.refresh()
 
     def refresh(self) -> None:
-        self.role_label.configure(text=self.message.role.title())
+        role = self.message.role.title() + " (hidden)" * self.message.hidden
+        self.role_label.configure(text=role)
         self.content_label.configure(text=self.message.content)
 
         if self.message.role == "user":

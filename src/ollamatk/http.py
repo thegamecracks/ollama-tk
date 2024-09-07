@@ -56,14 +56,13 @@ async def generate_chat_completion(
             target.message.content = message
         target.refresh()
 
-    def hide_source() -> None:
-        # Make sure a followup chat doesn't remember the last message that failed
+    def hide_messages() -> None:
+        # Make sure a followup chat doesn't remember the failed messages
+        target.message.hidden = True
+        target.refresh()
         if source is not None:
             source.message.hidden = True
             source.refresh()
-
-    if not target.message.hidden:
-        raise ValueError("target message must be initially hidden")
 
     payload = {"model": model, "messages": messages}
     append_errors = False
@@ -98,19 +97,16 @@ async def generate_chat_completion(
 
     except asyncio.CancelledError:
         show_error("(Response cancelled)")
-        hide_source()
+        hide_messages()
         raise
     except httpx.ConnectError:
         show_error("Could not connect to the given address. Is the server running?")
-        hide_source()
+        hide_messages()
     except Exception:
         # TODO: show more detailed error messages
         show_error("An unknown error occurred. Please try again.")
-        hide_source()
+        hide_messages()
         raise
-    else:
-        target.message.hidden = False
-        target.refresh()
 
 
 async def list_local_models(address: str) -> list[str]:
