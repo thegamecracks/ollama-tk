@@ -51,7 +51,7 @@ class TkChat(Frame):
             source=source,
             address=self.settings.ollama_address,
             model=self.settings.ollama_model,
-            messages=self.message_list.dump(),
+            messages=self.message_list.dump(exclude=[frame]),
         )
 
         fut = self.chat_fut = self.app.event_thread.submit(coro)

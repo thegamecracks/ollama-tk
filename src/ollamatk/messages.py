@@ -4,7 +4,7 @@ import importlib.resources
 from dataclasses import dataclass
 from tkinter import Event, PhotoImage
 from tkinter.ttk import Frame, Label
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Collection, Literal
 
 from .scrollable_frame import ScrollableFrame
 from .wrap_label import WrapLabel
@@ -108,11 +108,16 @@ class TkMessageList(ScrollableFrame):
         for message in self.messages.copy():
             message.destroy()  # NOTE: this is O(n^2)
 
-    def dump(self, *, include_hidden: bool = False) -> list[dict[str, Any]]:
+    def dump(
+        self,
+        *,
+        exclude: Collection[TkMessageFrame] = (),
+        include_hidden: bool = False,
+    ) -> list[dict[str, Any]]:
         return [
             frame.message.dump()
             for frame in self.messages
-            if include_hidden or not frame.message.hidden
+            if (include_hidden or not frame.message.hidden) and frame not in exclude
         ]
 
 
