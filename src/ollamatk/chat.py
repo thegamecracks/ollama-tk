@@ -86,6 +86,27 @@ class TkChat(Frame):
         self.settings_controls.model.configure(values=fut.result())
 
 
+class TkLiveControls(Frame):
+    def __init__(self, chat: TkChat) -> None:
+        super().__init__(chat)
+
+        self.chat = chat
+
+        self.grid_columnconfigure(0, weight=1)
+
+        self.cancel = Button(self, command=self.do_cancel, text="Cancel")
+        self.cancel.grid(row=0, column=0)
+
+    def do_cancel(self) -> None:
+        if self.chat.chat_fut is not None:
+            self.chat.chat_fut.cancel()
+            self.cancel.state(["disabled"])
+
+    def show(self) -> None:
+        self.cancel.state(["!disabled"])
+        self.grid()
+
+
 class TkChatControls(Frame):
     def __init__(self, chat: TkChat) -> None:
         super().__init__(chat)
@@ -114,27 +135,6 @@ class TkChatControls(Frame):
         self.text.bind("<Shift-Return>", lambda event: self.text.insert("insert", "\n"))
         self.text.unbind_all("<Return>")
         self.text.bind("<Return>", lambda event: self.buttons.do_send())
-
-
-class TkLiveControls(Frame):
-    def __init__(self, chat: TkChat) -> None:
-        super().__init__(chat)
-
-        self.chat = chat
-
-        self.grid_columnconfigure(0, weight=1)
-
-        self.cancel = Button(self, command=self.do_cancel, text="Cancel")
-        self.cancel.grid(row=0, column=0)
-
-    def do_cancel(self) -> None:
-        if self.chat.chat_fut is not None:
-            self.chat.chat_fut.cancel()
-            self.cancel.state(["disabled"])
-
-    def show(self) -> None:
-        self.cancel.state(["!disabled"])
-        self.grid()
 
 
 class TkChatButtons(Frame):
