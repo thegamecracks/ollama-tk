@@ -22,6 +22,8 @@ ollamatk
 python -m ollamatk
 ```
 
+Clicking on any message will copy its contents to your clipboard.
+
 ## License
 
 This project is written under the MIT license.

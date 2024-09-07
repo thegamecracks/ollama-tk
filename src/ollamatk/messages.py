@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import importlib.resources
 from dataclasses import dataclass
-from tkinter import PhotoImage
+from tkinter import Event, PhotoImage
 from tkinter.ttk import Frame, Label
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -56,6 +56,7 @@ class TkMessageFrame(Frame):
         )
 
         self.content_label = WrapLabel(self, anchor=anchor, justify=side)
+        self.content_label.bind("<1>", self._on_content_label_click)
         self.content_label.grid(row=1, column=1, sticky="nesw")
 
         self.refresh()
@@ -72,6 +73,10 @@ class TkMessageFrame(Frame):
     def destroy(self) -> None:
         super().destroy()
         self.message_list.messages.remove(self)
+
+    def _on_content_label_click(self, event: Event) -> None:
+        self.clipboard_clear()
+        self.clipboard_append(self.content_label["text"])
 
 
 class TkMessageList(ScrollableFrame):
