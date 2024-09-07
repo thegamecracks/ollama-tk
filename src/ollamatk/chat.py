@@ -132,8 +132,7 @@ class TkChatControls(Frame):
         self.buttons.enable()
 
     def _init_text_bindings(self) -> None:
-        self.text.bind("<Shift-Return>", lambda event: self.text.insert("insert", "\n"))
-        self.text.unbind_all("<Return>")
+        self.text.bind("<Shift-Return>", lambda event: self.text.insert("insert", ""))
         self.text.bind("<Return>", lambda event: self.buttons.do_send())
 
 
