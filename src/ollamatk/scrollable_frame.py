@@ -50,6 +50,7 @@ class ScrollableFrame(Frame):
         self.inner.bind("<Configure>", self.__on_inner_configure)
 
         self.__last_scrollregion = None
+        self.__last_scroll_edges = (False, False)
         self.__scrolled_widgets = WeakSet()
         self.__style = Style(self)
         self.__update_rate = 125
@@ -86,12 +87,13 @@ class ScrollableFrame(Frame):
         self.__update_scrollbar_visibility("y")
         self.__propagate_scroll_binds(self.inner)
         self.__update_scroll_edges(bbox, *scroll_edges)
+        self.__last_scroll_edges = scroll_edges
 
     def __get_scroll_edges(self) -> tuple[bool, bool]:
         xview = self.__canvas.xview()
         yview = self.__canvas.yview()
-        scrolled_to_right = xview[1] == 1 and xview[0] != 0
-        scrolled_to_bottom = yview[1] == 1 and yview[0] != 0
+        scrolled_to_right = xview[1] == 1
+        scrolled_to_bottom = yview[1] == 1
         return scrolled_to_right, scrolled_to_bottom
 
     def __propagate_scroll_binds(self, parent: Widget):
@@ -115,9 +117,9 @@ class ScrollableFrame(Frame):
         elif bbox == last_bbox:
             return
 
-        if scrolled_to_right:
+        if scrolled_to_right or self.__last_scroll_edges[0]:
             self.__canvas.xview_moveto(1)
-        if scrolled_to_bottom:
+        if scrolled_to_bottom or self.__last_scroll_edges[1]:
             self.__canvas.yview_moveto(1)
 
     def __on_mouse_xscroll(self, event: Event):
@@ -132,14 +134,8 @@ class ScrollableFrame(Frame):
         scrollbar = self.__get_scrollbar_from_axis(axis)
         if scrollbar.get() == (0, 1):
             scrollbar.grid_remove()
-            return
-
-        scrollbar.grid()
-        if self.autoscroll:
-            if axis == "x":
-                self.__canvas.xview_moveto(1)
-            else:
-                self.__canvas.yview_moveto(1)
+        else:
+            scrollbar.grid()
 
     def __wrap_scrollbar_set(self, axis: Literal["x", "y"]):
         def wrapper(*args, **kwargs):
