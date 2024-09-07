@@ -2,6 +2,8 @@
 
 A simple, tkinter-based GUI for chatting with an LLM via any Ollama API.
 
+![](/docs/images/demo.gif)
+
 You might also be interested in chyok's version: https://github.com/chyok/ollama-gui
 
 ## Usage
