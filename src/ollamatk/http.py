@@ -32,6 +32,14 @@ class DoneStreamingChat(TypedDict):
     eval_duration: int  # in nanoseconds
 
 
+# TODO: Reuse HTTP clients across requests.
+#       These API functions can be easily wrapped in a class, but the annoying
+#       part is handling the client's lifetime. This will likely involve creating
+#       an asyncio task to keep the client open.
+def create_httpx_client(base_url: str) -> httpx.AsyncClient:
+    return httpx.AsyncClient(base_url=base_url, timeout=10)
+
+
 async def generate_chat_completion(
     *,
     target: TkMessageFrame,
@@ -60,9 +68,8 @@ async def generate_chat_completion(
     append_errors = False
 
     try:
-        # TODO: reuse HTTP client
         async with (
-            httpx.AsyncClient(base_url=address, timeout=10) as client,
+            create_httpx_client(address) as client,
             client.stream("POST", "/api/chat", json=payload) as response,
         ):
             response.raise_for_status()
@@ -99,3 +106,10 @@ async def generate_chat_completion(
     else:
         target.message.hidden = False
         target.refresh()
+
+
+async def list_local_models(address: str) -> list[str]:
+    async with create_httpx_client(address) as client:
+        response = await client.get("/api/tags")
+        response.raise_for_status()
+        return [model["name"] for model in response.json()["models"]]

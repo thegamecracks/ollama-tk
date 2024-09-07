@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import concurrent.futures
+from concurrent.futures import Future
 from tkinter import Text
 from tkinter.ttk import Button, Frame
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from .http import generate_chat_completion
+from .http import generate_chat_completion, list_local_models
 from .messages import Message, TkMessageFrame, TkMessageList
 from .settings import Settings, TkSettingsControls
 
@@ -53,10 +53,25 @@ class TkChat(Frame):
         self.settings_controls.disable()
         self.chat_controls.disable()
 
-    def _on_send_chat_done(self, fut: concurrent.futures.Future) -> None:
+    def _on_send_chat_done(self, fut: Future[Any]) -> None:
         self.settings_controls.enable()
         self.chat_controls.enable()
         fut.result()  # If an error occurred, print it
+
+    def maybe_get_models(self) -> None:
+        # FIXME: update models any time address is changed
+        if self.settings_controls.model["values"]:
+            return
+
+        coro = list_local_models(address=self.settings.ollama_address)
+        fut = self.app.event_thread.submit(coro)
+        fut.add_done_callback(self._on_maybe_get_models_done)
+
+    def _on_maybe_get_models_done(self, fut: Future[list[str]]) -> None:
+        if fut.cancelled() or fut.exception():
+            return
+
+        self.settings_controls.model.configure(values=fut.result())
 
 
 class TkChatControls(Frame):
@@ -113,6 +128,7 @@ class TkChatButtons(Frame):
         message = self.controls.chat.message_list.add_message(message)
         self.controls.text.delete("1.0", "end")
         self.controls.chat.send_chat(source=message)
+        self.controls.chat.maybe_get_models()
 
         scroll = self.controls.chat.message_list.scroll_to_bottom
         self.after(100, scroll)  # HACK: need to wait before scrolling
