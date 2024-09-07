@@ -1,8 +1,10 @@
-from tkinter import Event, Tk
+import logging
+from tkinter import Event, Menu, Tk
 from tkinter.ttk import Frame
 
-from .chat import TkChat
+from .chat import TkChat, TkChatMenu
 from .event_thread import EventThread
+from .logging import LogStore, TkAppLogHandler
 
 
 class TkApp(Tk):
@@ -12,14 +14,18 @@ class TkApp(Tk):
         self.event_thread = event_thread
         self._connect_lifetime_with_event_thread(event_thread)
 
+        self.logs = LogStore()
+
         self.title("Ollama Tk")
         self.geometry("560x670")
+        self.option_add("*tearOff", False)
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
         self.frame = TkChat(self)
         self.frame.grid(sticky="nesw")
+        self.switch_menu(TkChatMenu(self))
 
         self.bind("<<Destroy>>", self._on_destroy)
 
@@ -27,6 +33,17 @@ class TkApp(Tk):
         self.frame.destroy()
         self.frame = frame
         self.frame.grid(sticky="nesw")
+
+    def switch_menu(self, menu: Menu | None) -> None:
+        if menu is None:
+            menu = Menu(self)
+
+        self.configure(menu=menu)
+
+    def listen_to_logs_from(self, logger: logging.Logger) -> TkAppLogHandler:
+        handler = TkAppLogHandler(self)
+        logger.addHandler(handler)
+        return handler
 
     def _connect_lifetime_with_event_thread(self, event_thread: EventThread) -> None:
         # In our application we'll be running an asyncio event loop in

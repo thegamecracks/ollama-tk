@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import logging
 from concurrent.futures import Future
-from tkinter import Text
+from tkinter import Menu, Text
 from tkinter.ttk import Button, Frame
 from typing import TYPE_CHECKING, Any
+
+from .logging import TkLogView
 
 from .http import generate_chat_completion, list_local_models
 from .messages import Message, TkMessageFrame, TkMessageList
@@ -11,6 +14,8 @@ from .settings import Settings, TkSettingsControls
 
 if TYPE_CHECKING:
     from .app import TkApp
+
+log = logging.getLogger(__name__)
 
 
 class TkChat(Frame):
@@ -66,8 +71,8 @@ class TkChat(Frame):
         self.live_controls.grid_remove()
         self.chat_controls.enable()
 
-        if not fut.cancelled():
-            fut.result()  # If an error occurred, print it
+        if not fut.cancelled() and fut.exception() is not None:
+            log.exception("Error occurred while sending chat", exc_info=fut.exception())
 
     def maybe_get_models(self) -> None:
         # FIXME: update models any time address is changed
@@ -79,8 +84,13 @@ class TkChat(Frame):
         fut.add_done_callback(self._on_maybe_get_models_done)
 
     def _on_maybe_get_models_done(self, fut: Future[list[str]]) -> None:
-        if fut.cancelled() or fut.exception():
+        if fut.cancelled():
             return
+        elif fut.exception() is not None:
+            return log.exception(
+                "Error occurred while fetching available models",
+                exc_info=fut.exception(),
+            )
 
         self.settings_controls.model.configure(values=fut.result())
 
@@ -171,3 +181,10 @@ class TkChatButtons(Frame):
     def enable(self) -> None:
         self.send_button.state(["!disabled"])
         self.clear_button.state(["!disabled"])
+
+
+class TkChatMenu(Menu):
+    def __init__(self, app: TkApp) -> None:
+        super().__init__(app)
+        self.app = app
+        self.add_command(command=lambda: TkLogView(app), label="Logs")

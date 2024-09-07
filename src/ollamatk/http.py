@@ -104,7 +104,7 @@ async def generate_chat_completion(
         hide_messages()
     except Exception:
         # TODO: show more detailed error messages
-        show_error("An unknown error occurred. Please try again.")
+        show_error("An unknown error occurred. Check logs for more details.")
         hide_messages()
         raise
 

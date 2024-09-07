@@ -1,9 +1,11 @@
 import contextlib
 import functools
+import logging
 import sys
 
 from .app import TkApp
 from .event_thread import EventThread
+from .logging import configure_logging
 
 
 def suppress(*exceptions: type[BaseException]):
@@ -20,10 +22,12 @@ def suppress(*exceptions: type[BaseException]):
 
 @suppress(KeyboardInterrupt)
 def main() -> None:
+    configure_logging()
     enable_windows_dpi_awareness()
 
     with EventThread() as event_thread:
         app = TkApp(event_thread)
+        app.listen_to_logs_from(logging.getLogger())
 
         try:
             app.mainloop()
