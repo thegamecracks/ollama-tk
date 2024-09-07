@@ -1,6 +1,8 @@
 # ollama-tk
 
-A simple, tkinter-based GUI for chatting with an LLM via any Ollama API.
+A simple, tkinter-based GUI for chatting with an LLM via any [Ollama] API.
+
+[Ollama]: https://github.com/ollama/ollama
 
 ![](/docs/images/demo.gif)
 
