@@ -12,7 +12,9 @@ def suppress(*exceptions: type[BaseException]):
         def wrapper(*args, **kwargs):
             with contextlib.suppress(*exceptions):
                 return func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
