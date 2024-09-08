@@ -28,7 +28,8 @@ def main() -> None:
 
     with EventThread() as event_thread:
         http = HTTPClient()
-        event_thread.submit(http.run())
+        http_task = event_thread.submit(http.run())
+
         app = TkApp(event_thread, http)
         app.listen_to_logs_from(logging.getLogger())
 
