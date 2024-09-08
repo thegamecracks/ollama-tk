@@ -53,7 +53,7 @@ class LogStore:
             callback(type, message)
 
 
-class TkLogView(Toplevel):
+class TkLogWindow(Toplevel):
     def __init__(self, app: TkApp) -> None:
         super().__init__(app)
 
