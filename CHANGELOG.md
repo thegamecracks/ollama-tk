@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.0.2] - 2024-09-08
+
 ### Added
 
 - Better error messages for unsuccessful HTTP status codes
@@ -22,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 This is the first release of ollama-tk! 🎉
 
-[Unreleased]: https://github.com/thegamecracks/ollama-tk/compare/v1.0.1...main
+[Unreleased]: https://github.com/thegamecracks/ollama-tk/compare/v1.0.2...main
+[1.0.2]: https://github.com/thegamecracks/ollama-tk/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/thegamecracks/ollama-tk/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/thegamecracks/ollama-tk/releases/tag/v1.0.0
