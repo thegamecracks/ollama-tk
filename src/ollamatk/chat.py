@@ -7,8 +7,6 @@ from tkinter.ttk import Button, Frame
 from typing import TYPE_CHECKING, Any
 
 from .logging import TkLogView
-
-from .http import generate_chat_completion, list_local_models
 from .messages import Message, TkMessageFrame, TkMessageList
 from .settings import Settings, TkSettingsControls
 
@@ -51,7 +49,7 @@ class TkChat(Frame):
         message = Message("assistant", "Waiting for response...")
         frame = self.message_list.add_message(message)
 
-        coro = generate_chat_completion(
+        coro = self.app.http.generate_chat_completion(
             target=frame,
             source=source,
             address=self.settings.ollama_address,
@@ -79,7 +77,7 @@ class TkChat(Frame):
         if self.settings_controls.model["values"]:
             return
 
-        coro = list_local_models(address=self.settings.ollama_address)
+        coro = self.app.http.list_local_models(self.settings.ollama_address)
         fut = self.app.event_thread.submit(coro)
         fut.add_done_callback(self._on_maybe_get_models_done)
 

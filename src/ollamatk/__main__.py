@@ -5,6 +5,7 @@ import sys
 
 from .app import TkApp
 from .event_thread import EventThread
+from .http import HTTPClient
 from .logging import configure_logging
 
 
@@ -26,7 +27,9 @@ def main() -> None:
     enable_windows_dpi_awareness()
 
     with EventThread() as event_thread:
-        app = TkApp(event_thread)
+        http = HTTPClient()
+        event_thread.submit(http.run())
+        app = TkApp(event_thread, http)
         app.listen_to_logs_from(logging.getLogger())
 
         try:

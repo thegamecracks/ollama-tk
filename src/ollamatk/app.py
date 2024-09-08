@@ -4,17 +4,19 @@ from tkinter.ttk import Frame
 
 from .chat import TkChat, TkChatMenu
 from .event_thread import EventThread
+from .http import HTTPClient
 from .logging import LogStore, TkAppLogHandler
 
 
 class TkApp(Tk):
-    def __init__(self, event_thread: EventThread):
+    def __init__(self, event_thread: EventThread, http: HTTPClient):
         super().__init__()
 
         self.event_thread = event_thread
-        self._connect_lifetime_with_event_thread(event_thread)
-
+        self.http = http
         self.logs = LogStore()
+
+        self._connect_lifetime_with_event_thread(event_thread)
 
         self.title("Ollama Tk")
         self.geometry("560x670")
