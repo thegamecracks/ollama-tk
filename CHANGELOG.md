@@ -6,9 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Better error messages for unsuccessful HTTP status codes
+
 ## [1.0.1] - 2024-09-07
 
-### Fixes
+### Fixed
 
 - Fix chat being continuously forced to bottom
 
