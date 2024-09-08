@@ -6,6 +6,7 @@ from tkinter import Menu, Text
 from tkinter.ttk import Button, Frame
 from typing import TYPE_CHECKING, Any
 
+from .about import TkAboutWindow
 from .logging import TkLogWindow
 from .messages import Message, TkMessageFrame, TkMessageList
 from .settings import Settings, TkSettingsControls
@@ -186,3 +187,4 @@ class TkChatMenu(Menu):
         super().__init__(app)
         self.app = app
         self.add_command(command=lambda: TkLogWindow(app), label="Logs")
+        self.add_command(command=lambda: TkAboutWindow(app), label="About")
