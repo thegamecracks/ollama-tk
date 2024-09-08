@@ -102,6 +102,19 @@ async def generate_chat_completion(
     except httpx.ConnectError:
         show_error("Could not connect to the given address. Is the server running?")
         hide_messages()
+    except httpx.HTTPStatusError as e:
+        hide_messages()
+        status = e.response.status_code
+        phrase = e.response.reason_phrase
+
+        if status == 400:
+            show_error(f"{status} {phrase}. Did you select the model to run?")
+        elif status == 404:
+            show_error(f"{status} {phrase}. Maybe your selected model does not exist?")
+        else:
+            show_error(f"{status} {phrase}. Check logs for more details.")
+            raise
+
     except Exception:
         # TODO: show more detailed error messages
         show_error("An unknown error occurred. Check logs for more details.")
