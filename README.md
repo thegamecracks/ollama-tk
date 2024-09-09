@@ -29,7 +29,7 @@ You might also be interested in chyok's version: https://github.com/chyok/ollama
 2. Then start the program with:
 
    ```sh
-   ollamatk
+   ollama-tk
    # Or:
    python -m ollamatk
    ```
