@@ -9,7 +9,20 @@ readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "thegamecracks" }]
 license = { text = "MIT" }
-classifiers = []
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: AsyncIO",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
+]
 dynamic = ["version"]
 dependencies = ["httpx>=0.27.2"]
 
