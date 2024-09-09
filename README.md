@@ -14,19 +14,25 @@ You might also be interested in chyok's version: https://github.com/chyok/ollama
 
 ## Usage
 
-1. With Python 3.11+ and Git installed, run the following:
+1. With Python 3.11+ installed, run the following:
 
-```sh
-pip install git+https://github.com/thegamecracks/ollama-tk
-```
+   ```sh
+   pip install ollama-tk
+   ```
+
+   Or, if you want the development version and you have Git installed:
+
+   ```sh
+   pip install git+https://github.com/thegamecracks/ollama-tk
+   ```
 
 2. Then start the program with:
 
-```sh
-ollamatk
-# Or:
-python -m ollamatk
-```
+   ```sh
+   ollamatk
+   # Or:
+   python -m ollamatk
+   ```
 
 Clicking on any message will copy its contents to your clipboard.
 
