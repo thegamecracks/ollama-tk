@@ -1,1 +1,2 @@
+recursive-include src/ py.typed
 graft src/ollamatk/icons/
