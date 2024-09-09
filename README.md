@@ -1,5 +1,9 @@
 # ollama-tk
 
+[![](https://img.shields.io/pypi/v/ollama-tk?style=flat-square)](https://pypi.org/project/ollama-tk/)
+[![](https://img.shields.io/github/actions/workflow/status/thegamecracks/ollama-tk/black-lint.yml?style=flat-square&label=black)](https://black.readthedocs.io/en/stable/)
+[![](https://img.shields.io/github/actions/workflow/status/thegamecracks/ollama-tk/pyright-lint.yml?style=flat-square&label=pyright)](https://microsoft.github.io/pyright/#/)
+
 A simple, tkinter-based GUI for chatting with an LLM via any [Ollama] API.
 
 [Ollama]: https://github.com/ollama/ollama
