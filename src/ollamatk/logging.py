@@ -85,6 +85,7 @@ class TkLogWindow(Toplevel):
         self.scrollbar.pack(expand=True, fill="y", padx=(0, 10), pady=(10, 0))
 
         self.refresh()
+        self.text.yview_moveto(1)
         self.app.logs.callbacks.append(self._on_log_update)
 
     def refresh(self) -> None:
