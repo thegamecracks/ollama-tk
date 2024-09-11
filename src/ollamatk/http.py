@@ -1,10 +1,10 @@
 import asyncio
 import json
-from typing import Any, Literal, TypedDict, cast
+from typing import Any, Callable, Literal, TypedDict, cast
 
 import httpx
 
-from .messages import Role, TkMessageFrame
+from .messages import Role
 
 
 # https://github.com/ollama/ollama/blob/main/docs/api.md#generate-a-chat-completion
@@ -59,83 +59,31 @@ class HTTPClient:
     async def generate_chat_completion(
         self,
         *,
-        target: TkMessageFrame,
-        source: TkMessageFrame | None = None,
         address: httpx.URL | str,
         model: str,
         messages: list[dict[str, Any]],
+        stream_callback: Callable[[StreamingChat], Any],
+        connect_callback: Callable[[], Any] = lambda: True,
     ) -> None:
-        def show_error(message: str) -> None:
-            if append_errors:
-                target.message.content += f"...\n\n{message}"
-            else:
-                target.message.content = message
-            target.refresh()
-
-        def hide_messages() -> None:
-            # Make sure a followup chat doesn't remember the failed messages
-            target.message.hidden = True
-            target.refresh()
-            if source is not None:
-                source.message.hidden = True
-                source.refresh()
-
         address = httpx.URL(address).join("/api/chat")
         payload = {"model": model, "messages": messages}
-        append_errors = False
 
-        try:
-            async with self.client.stream("POST", address, json=payload) as response:
-                response.raise_for_status()
+        async with self.client.stream("POST", address, json=payload) as response:
+            response.raise_for_status()
+            connect_callback()
+            async for line in response.aiter_lines():  # NOTE: what if this hangs?
+                data = cast(StreamingChat | DoneStreamingChat, json.loads(line))
 
-                append_errors = True
-                target.message.content = ""
-                target.refresh()
+                error = data.get("error")
+                if error is not None:
+                    raise RuntimeError(error)
 
-                async for line in response.aiter_lines():  # NOTE: what if this hangs?
-                    data = cast(StreamingChat | DoneStreamingChat, json.loads(line))
-
-                    error = data.get("error")
-                    if error is not None:
-                        raise RuntimeError(error)
-
-                    if not data.get("done"):
-                        data = cast(StreamingChat, data)
-                        target.message.role = data["message"]["role"]
-                        target.message.content += data["message"]["content"]
-                    else:
-                        data = cast(DoneStreamingChat, data)
-                        # Nothing to do here really
-
-                    target.refresh()
-
-        except asyncio.CancelledError:
-            show_error("(Response cancelled)")
-            hide_messages()
-            raise
-        except httpx.ConnectError:
-            show_error("Could not connect to the given address. Is the server running?")
-            hide_messages()
-        except httpx.HTTPStatusError as e:
-            hide_messages()
-            status = e.response.status_code
-            phrase = e.response.reason_phrase
-
-            if status == 400:
-                show_error(f"{status} {phrase}. Did you select the model to run?")
-            elif status == 404:
-                show_error(
-                    f"{status} {phrase}. Maybe your selected model does not exist?"
-                )
-            else:
-                show_error(f"{status} {phrase}. Check logs for more details.")
-                raise
-
-        except Exception:
-            # TODO: show more detailed error messages
-            show_error("An unknown error occurred. Check logs for more details.")
-            hide_messages()
-            raise
+                if not data.get("done"):
+                    data = cast(StreamingChat, data)
+                    stream_callback(data)
+                else:
+                    data = cast(DoneStreamingChat, data)
+                    # Nothing to do here really
 
     async def list_local_models(self, address: httpx.URL | str) -> list[str]:
         address = httpx.URL(address).join("/api/tags")

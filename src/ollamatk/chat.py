@@ -6,7 +6,10 @@ from tkinter import Menu, Text
 from tkinter.ttk import Button, Frame
 from typing import TYPE_CHECKING, Any
 
+import httpx
+
 from .about import TkAboutWindow
+from .http import StreamingChat
 from .logging import TkLogWindow
 from .messages import Message, TkMessageFrame, TkMessageList
 from .settings import Settings, TkSettingsControls
@@ -19,6 +22,7 @@ log = logging.getLogger(__name__)
 
 class TkChat(Frame):
     chat_fut: Future | None
+    chat_handler: StreamingChatHandler | None
 
     def __init__(self, app: TkApp) -> None:
         super().__init__(app)
@@ -50,12 +54,14 @@ class TkChat(Frame):
         message = Message("assistant", "Waiting for response...")
         frame = self.message_list.add_message(message)
 
+        self.chat_handler = StreamingChatHandler(target=frame, source=source)
+
         coro = self.app.http.generate_chat_completion(
-            target=frame,
-            source=source,
             address=self.settings.ollama_address,
             model=self.settings.ollama_model,
             messages=self.message_list.dump(exclude=[frame]),
+            stream_callback=self.chat_handler,
+            connect_callback=self.chat_handler.handle_connect,
         )
 
         fut = self.chat_fut = self.app.event_thread.submit(coro)
@@ -70,8 +76,11 @@ class TkChat(Frame):
         self.live_controls.grid_remove()
         self.chat_controls.enable()
 
-        if not fut.cancelled() and fut.exception() is not None:
-            log.exception("Error occurred while sending chat", exc_info=fut.exception())
+        assert self.chat_handler is not None
+        if fut.cancelled():
+            self.chat_handler.handle_cancel()
+        elif (exc := fut.exception()) is not None:
+            self.chat_handler.handle_error(exc)
 
     def maybe_get_models(self) -> None:
         # FIXME: update models any time address is changed
@@ -92,6 +101,79 @@ class TkChat(Frame):
             )
 
         self.settings_controls.model.configure(values=fut.result())
+
+
+class StreamingChatHandler:
+    def __init__(
+        self,
+        *,
+        target: TkMessageFrame,
+        source: TkMessageFrame | None = None,
+    ) -> None:
+        self.target = target
+        self.source = source
+        self._started = False
+
+    def __call__(self, data: StreamingChat) -> None:
+        self.target.message.role = data["message"]["role"]
+        self.target.message.content += data["message"]["content"]
+        self.target.refresh()
+
+    def handle_connect(self) -> None:
+        self._started = True
+        self.target.message.content = ""
+        self.target.refresh()
+
+    def handle_cancel(self) -> None:
+        self._show_error("(Response cancelled)")
+        self._hide_messages()
+
+    def handle_error(self, exc: BaseException) -> None:
+        if isinstance(exc, httpx.ConnectError):
+            self._show_error(
+                "Could not connect to the given address. Is the server running?"
+            )
+            self._hide_messages()
+        elif isinstance(exc, httpx.HTTPStatusError):
+            self._handle_http_status_error(exc)
+        else:
+            # TODO: show more detailed error messages
+            self._show_error("An unknown error occurred. Check logs for more details.")
+            self._hide_messages()
+            self._log_error(exc)
+
+    def _handle_http_status_error(self, exc: httpx.HTTPStatusError) -> None:
+        self._hide_messages()
+        status = exc.response.status_code
+        phrase = exc.response.reason_phrase
+
+        if status == 400:
+            self._show_error(f"{status} {phrase}. Did you select the model to run?")
+        elif status == 404:
+            self._show_error(
+                f"{status} {phrase}. Maybe your selected model does not exist?"
+            )
+        else:
+            self._show_error(f"{status} {phrase}. Check logs for more details.")
+            self._log_error(exc)
+
+    def _show_error(self, message: str) -> None:
+        if self._started:
+            self.target.message.content += f"...\n\n{message}"
+        else:
+            self.target.message.content = message
+        self.target.refresh()
+
+    def _log_error(self, exc: BaseException) -> None:
+        log.exception("Error occurred while sending chat", exc_info=exc)
+
+    def _hide_messages(self) -> None:
+        # Make sure a followup chat doesn't remember the failed messages
+        self.target.message.hidden = True
+        self.target.refresh()
+        if self.source is not None:
+            self.source.message.hidden = True
+            self.source.refresh()
 
 
 class TkLiveControls(Frame):
