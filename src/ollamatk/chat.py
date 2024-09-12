@@ -49,6 +49,7 @@ class TkChat(Frame):
         self.chat_controls.grid(row=3, column=0, sticky="nesw", padx=10, pady=10)
 
         self.chat_fut = None
+        self.chat_handler = None
 
     def send_chat(self, *, source: TkMessageFrame | None) -> None:
         message = Message("assistant", "Waiting for response...")
