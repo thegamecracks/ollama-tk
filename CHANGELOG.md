@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.0.5] - 2024-09-12
+
+### Changed
+
+- Scroll log windows to bottom immediately when opened for convenience
+- Refactor handling of chat completion requests for easier maintenance
+
 ## [1.0.4] - 2024-09-09
 
 ### Added
@@ -47,7 +54,8 @@ This is our first release to go on PyPI! 🎉
 
 This is the first release of ollama-tk! 🎉
 
-[Unreleased]: https://github.com/thegamecracks/ollama-tk/compare/v1.0.4...main
+[Unreleased]: https://github.com/thegamecracks/ollama-tk/compare/v1.0.5...main
+[1.0.5]: https://github.com/thegamecracks/ollama-tk/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/thegamecracks/ollama-tk/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/thegamecracks/ollama-tk/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/thegamecracks/ollama-tk/compare/v1.0.1...v1.0.2
