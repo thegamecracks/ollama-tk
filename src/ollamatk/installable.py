@@ -34,7 +34,7 @@ class Installable(ABC):
         self.__lock = threading.Lock()
 
     @contextmanager
-    def install(self, event_thread: EventThread) -> Iterator[Self]:
+    def install(self, event_thread: EventThread, /) -> Iterator[Self]:
         """Install this instance in an event thread, setting up any
         asynchronous resources.
         """
