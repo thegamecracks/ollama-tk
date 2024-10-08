@@ -47,12 +47,11 @@ class HTTPClient(Installable):
             raise RuntimeError("HTTPClient is not running")
         return self._client
 
-    async def _install(self, ready_callback: Callable[[], Any]) -> None:
+    async def _install(self, ready_callback: Callable[[], asyncio.Future[Any]]) -> None:
         self._client = httpx.AsyncClient(timeout=10)
         try:
             async with self._client:
-                ready_callback()
-                await asyncio.get_running_loop().create_future()
+                await ready_callback()
         finally:
             self._client = None
 

@@ -1,7 +1,8 @@
+import asyncio
 import concurrent.futures
 import threading
 from abc import ABC, abstractmethod
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
 from typing import Any, Callable, Iterator, Self
 
 from .event_thread import EventThread
@@ -38,25 +39,35 @@ class Installable(ABC):
         """Install this instance in an event thread, setting up any
         asynchronous resources.
         """
+
+        def ready_callback() -> asyncio.Future[Any]:
+            ready_fut.set_result(None)
+            return asyncio.wrap_future(stop_fut)
+
         with self.__installing():
             ready_fut = concurrent.futures.Future()
-            ready_callback = lambda: ready_fut.set_result(None)
+            stop_fut = concurrent.futures.Future()
             task_fut = event_thread.submit(self._install(ready_callback))
 
             try:
                 ready_fut.result()
                 yield self
             finally:
-                task_fut.cancel()
-                with suppress(concurrent.futures.CancelledError):
-                    task_fut.result()
+                stop_fut.set_result(None)
+                task_fut.result()
 
     @abstractmethod
-    async def _install(self, ready_callback: Callable[[], Any], /) -> Any:
+    async def _install(
+        self,
+        ready_callback: Callable[[], asyncio.Future[Any]],
+        /,
+    ) -> Any:
         """Set up this class's resources and run indefinitely until cancelled.
 
         :param ready_callback:
             A function to call once initialization has finished.
+            Returns a future whose result will be set once the
+            instance needs to be teared down.
 
         """
         raise NotImplementedError
