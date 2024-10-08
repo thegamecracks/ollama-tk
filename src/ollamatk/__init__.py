@@ -10,6 +10,7 @@ from .chat import (
 )
 from .event_thread import EventThread
 from .http import DoneStreamingChat, HTTPClient, Message, StreamingChat
+from .installable import Installable
 from .logging import LogStore, TkAppLogHandler, TkLogWindow, configure_logging
 from .messages import Message, TkMessageFrame, TkMessageList, load_message_icons
 from .scrollable_frame import ScrollableFrame
