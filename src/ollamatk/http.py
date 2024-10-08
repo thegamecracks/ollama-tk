@@ -4,6 +4,7 @@ from typing import Any, Callable, Literal, TypedDict, cast
 
 import httpx
 
+from .installable import Installable
 from .messages import Role
 
 
@@ -33,10 +34,11 @@ class DoneStreamingChat(TypedDict):
     eval_duration: int  # in nanoseconds
 
 
-class HTTPClient:
+class HTTPClient(Installable):
     _client: httpx.AsyncClient | None
 
     def __init__(self) -> None:
+        super().__init__()
         self._client = None
 
     @property
@@ -45,13 +47,11 @@ class HTTPClient:
             raise RuntimeError("HTTPClient is not running")
         return self._client
 
-    async def run(self) -> None:
-        if self._client is not None:
-            raise RuntimeError("HTTPClient is already running")
-
+    async def _install(self, ready_callback: Callable[[], Any]) -> None:
         self._client = httpx.AsyncClient(timeout=10)
         try:
             async with self._client:
+                ready_callback()
                 await asyncio.get_running_loop().create_future()
         finally:
             self._client = None
