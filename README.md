@@ -11,7 +11,12 @@ A simple, tkinter-based GUI for chatting with an LLM via any [Ollama] API.
 
 ![](https://raw.githubusercontent.com/thegamecracks/ollama-tk/main/docs/images/demo.gif)
 
-You might also be interested in chyok's version: https://github.com/chyok/ollama-gui
+You might also be interested in:
+- [ollama-gui](https://github.com/chyok/ollama-gui):
+  A similar PyPI project written by chyok. Turns out they beat me to the punch a few months earlier!
+- [Open WebUI](https://github.com/open-webui/open-webui):
+  A much more capable, locally hostable web dashboard for interacting with LLM
+  APIs, including Ollama.
 
 ## Usage
 
