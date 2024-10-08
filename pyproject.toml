@@ -26,9 +26,15 @@ classifiers = [
 dynamic = ["version"]
 dependencies = ["httpx>=0.27.2"]
 
+[project.optional-dependencies]
+tests = ["pytest>=8.3.3"]
+
 [project.gui-scripts]
 ollamatk = "ollamatk.__main__:main"
 ollama-tk = "ollamatk.__main__:main"
+
+[tool.pytest.ini_options]
+addopts = ["--import-mode=importlib"]
 
 [tool.setuptools_scm]
 
