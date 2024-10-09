@@ -53,5 +53,5 @@ def test_double_install(event_thread: EventThread) -> None:
     with NullInstallable().install(event_thread) as installable:
         with pytest.raises(RuntimeError):
             with installable.install(event_thread):
-                raise Exception("double install was not blocked")
+                assert False, "double install was not blocked"
     assert installable.events == ["start", "end"]

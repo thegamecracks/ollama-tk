@@ -17,8 +17,7 @@ def test_log_store_mutation_during_iteration() -> None:
 
     for i, m in enumerate(store):
         store.append(m)
-        if i >= 1:
-            raise Exception(f"unexpected message {m!r}, possible infinite iteration?")
+        assert i < 1, f"unexpected message {m!r}, possible infinite iteration?"
 
     assert list(store) == ["1", "1"]
 
