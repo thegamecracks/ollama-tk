@@ -57,6 +57,10 @@ def test_log_store_callback_within_callback() -> None:
 
     def second(type: LogEventType, message: str) -> None:
         events.append("second")
+        store.callbacks.append(third)
+
+    def third(type: LogEventType, message: str) -> None:
+        assert False, "unexpected call to third callback, possible infinite callback?"
 
     events: list[str] = []
     store = LogStore()
