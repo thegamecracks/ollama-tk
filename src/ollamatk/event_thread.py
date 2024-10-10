@@ -18,6 +18,10 @@ class EventThread(threading.Thread):
         >>> # Event loop will be cleaned up before exiting
     """
 
+    loop_fut: concurrent.futures.Future[asyncio.AbstractEventLoop]
+    stop_fut: concurrent.futures.Future[None]
+    finished_fut: concurrent.futures.Future[None]
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.loop_fut = concurrent.futures.Future()
