@@ -30,8 +30,15 @@ class Installable(ABC):
 
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        *,
+        ready_timeout: float | None = 5,
+        stop_timeout: float | None = 5,
+    ) -> None:
         super().__init__()
+        self.ready_timeout = ready_timeout
+        self.stop_timeout = stop_timeout
         self.__lock = threading.Lock()
 
     @contextmanager
@@ -44,6 +51,13 @@ class Installable(ABC):
             ready_fut.set_result(None)
             return asyncio.wrap_future(stop_fut)
 
+        def cancel_task() -> None:
+            nonlocal cancel_expected
+            cancel_expected = True
+            task_fut.cancel()
+
+        cancel_expected = False
+
         with self.__installing():
             ready_fut = concurrent.futures.Future()
             stop_fut = concurrent.futures.Future()
@@ -53,20 +67,27 @@ class Installable(ABC):
                 done, _ = concurrent.futures.wait(
                     (task_fut, ready_fut),
                     return_when="FIRST_COMPLETED",
+                    timeout=self.ready_timeout,
                 )
                 if ready_fut not in done:
                     if task_fut.done():
-                        task_fut.result()  # propagate task exception
-
-                    raise RuntimeError(
-                        f"{type(self).__name__} did not invoke ready callback "
-                        f"during installation"
-                    )
+                        task_fut.result()  # propagate task exception if any
+                        raise RuntimeError(
+                            f"{type(self).__name__} did not invoke ready callback "
+                            f"during installation"
+                        )
+                    else:
+                        cancel_task()
+                        raise TimeoutError(
+                            f"{type(self).__name__} exceeded "
+                            f"ready_timeout={self.ready_timeout}"
+                        )
 
                 yield self
             finally:
                 stop_fut.set_result(None)
-                task_fut.result()
+                if not cancel_expected:
+                    task_fut.result(timeout=self.stop_timeout)
 
     @abstractmethod
     async def _install(

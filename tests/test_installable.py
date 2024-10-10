@@ -35,6 +35,29 @@ class FaultyInstallable(Installable):
         raise Exception("test")
 
 
+class LongInstallable(Installable):
+    def __init__(
+        self,
+        *,
+        ready_delay: float = 0,
+        ready_timeout: float | None = 5,
+        stop_delay: float = 0,
+        stop_timeout: float | None = 5,
+    ) -> None:
+        super().__init__(ready_timeout=ready_timeout, stop_timeout=stop_timeout)
+        self.ready_delay = ready_delay
+        self.stop_delay = stop_delay
+
+    async def _install(self, ready_callback: Callable[[], asyncio.Future[Any]]) -> Any:
+        await asyncio.sleep(self.ready_delay)
+        try:
+            await ready_callback()
+        except BaseException:
+            raise
+        else:
+            await asyncio.sleep(self.stop_delay)
+
+
 def test_installable(event_thread: EventThread) -> None:
     with NullInstallable().install(event_thread) as installable:
         assert installable.events == ["start"]
@@ -61,6 +84,20 @@ def test_faulty_installable(event_thread: EventThread) -> None:
     installable = FaultyInstallable()
     with pytest.raises(Exception, match="test"), installable.install(event_thread):
         assert False, "Install exception did not propagate to caller"
+
+
+def test_long_ready_installable(event_thread: EventThread) -> None:
+    installable = LongInstallable(ready_delay=0.3, ready_timeout=0.1)
+    with pytest.raises(TimeoutError), installable.install(event_thread):
+        assert False, "Exceeding ready_timeout did not raise TimeoutError"
+
+
+def test_long_stop_installable(event_thread: EventThread) -> None:
+    installable = LongInstallable(stop_delay=0.3, stop_timeout=0.1)
+    with pytest.raises(TimeoutError):
+        with installable.install(event_thread):
+            pass
+        assert False, "Exceeding stop_timeout did not raise TimeoutError"
 
 
 def test_repeat_installable(event_thread: EventThread) -> None:

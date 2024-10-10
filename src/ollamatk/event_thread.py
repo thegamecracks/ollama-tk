@@ -22,15 +22,23 @@ class EventThread(threading.Thread):
     stop_fut: concurrent.futures.Future[None]
     finished_fut: concurrent.futures.Future[None]
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        *args,
+        loop_timeout: float | None = 5,
+        **kwargs,
+    ) -> None:
         super().__init__(*args, **kwargs)
+
+        self.loop_timeout = loop_timeout
+
         self.loop_fut = concurrent.futures.Future()
         self.stop_fut = concurrent.futures.Future()
         self.finished_fut = concurrent.futures.Future()
 
     def __enter__(self) -> Self:
         self.start()
-        self.loop_fut.result()  # ensure the loop is ready
+        self.loop  # ensure the loop is ready
         return self
 
     def __exit__(self, exc_type, exc_val, tb) -> None:
@@ -39,7 +47,7 @@ class EventThread(threading.Thread):
 
     @property
     def loop(self) -> asyncio.AbstractEventLoop:
-        return self.loop_fut.result()
+        return self.loop_fut.result(timeout=self.loop_timeout)
 
     def run(self) -> None:
         try:
