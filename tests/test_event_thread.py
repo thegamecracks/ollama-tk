@@ -28,7 +28,10 @@ class InfiniteTask:
         finally:
             self._dispatch("end")
 
-    def create_future_for_event(self, value: Hashable) -> concurrent.futures.Future[None]:
+    def create_future_for_event(
+        self,
+        value: Hashable,
+    ) -> concurrent.futures.Future[None]:
         def callback() -> None:
             fut.set_result(None)
             self._event_callbacks[value].remove(callback)
