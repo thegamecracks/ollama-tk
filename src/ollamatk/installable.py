@@ -58,6 +58,11 @@ class Installable(ABC):
                     if task_fut.done():
                         task_fut.result()  # propagate task exception
 
+                    raise RuntimeError(
+                        f"{type(self).__name__} did not invoke ready callback "
+                        f"during installation"
+                    )
+
                 yield self
             finally:
                 stop_fut.set_result(None)
@@ -73,6 +78,9 @@ class Installable(ABC):
 
         If an exception occurs in this coroutine, it will be propagated
         to the caller.
+
+        If the coroutine returns without calling the ready callback,
+        :exc:`RuntimeError` is raised to the caller.
 
         :param ready_callback:
             A function to call once initialization has finished.

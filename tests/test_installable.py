@@ -25,6 +25,11 @@ class NullInstallable(Installable):
             self.events.append("end")
 
 
+class EarlyReturnInstallable(Installable):
+    async def _install(self, ready_callback: Callable[[], asyncio.Future[Any]]) -> Any:
+        return
+
+
 class FaultyInstallable(Installable):
     async def _install(self, ready_callback: Callable[[], asyncio.Future[Any]]) -> Any:
         raise Exception("test")
@@ -44,6 +49,12 @@ def test_installable_exits_after_exception(event_thread: EventThread) -> None:
 
     # Exception will not propagate to _install()
     assert installable.events == ["start", "end"]
+
+
+def test_installable_return_before_ready(event_thread: EventThread) -> None:
+    installable = EarlyReturnInstallable()
+    with pytest.raises(RuntimeError), installable.install(event_thread):
+        assert False, "Installable did not raise RuntimeError for non-ready install"
 
 
 def test_faulty_installable(event_thread: EventThread) -> None:
