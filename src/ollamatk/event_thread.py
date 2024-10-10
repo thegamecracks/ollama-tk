@@ -30,6 +30,7 @@ class EventThread(threading.Thread):
 
     def __enter__(self) -> Self:
         self.start()
+        self.loop_fut.result()  # ensure the loop is ready
         return self
 
     def __exit__(self, exc_type, exc_val, tb) -> None:
