@@ -50,7 +50,14 @@ class Installable(ABC):
             task_fut = event_thread.submit(self._install(ready_callback))
 
             try:
-                ready_fut.result()
+                done, _ = concurrent.futures.wait(
+                    (task_fut, ready_fut),
+                    return_when="FIRST_COMPLETED",
+                )
+                if ready_fut not in done:
+                    if task_fut.done():
+                        task_fut.result()  # propagate task exception
+
                 yield self
             finally:
                 stop_fut.set_result(None)
@@ -63,6 +70,9 @@ class Installable(ABC):
         /,
     ) -> Any:
         """Set up this class's resources and run indefinitely until cancelled.
+
+        If an exception occurs in this coroutine, it will be propagated
+        to the caller.
 
         :param ready_callback:
             A function to call once initialization has finished.

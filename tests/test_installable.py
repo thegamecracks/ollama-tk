@@ -25,13 +25,18 @@ class NullInstallable(Installable):
             self.events.append("end")
 
 
+class FaultyInstallable(Installable):
+    async def _install(self, ready_callback: Callable[[], asyncio.Future[Any]]) -> Any:
+        raise Exception("test")
+
+
 def test_installable(event_thread: EventThread) -> None:
     with NullInstallable().install(event_thread) as installable:
         assert installable.events == ["start"]
     assert installable.events == ["start", "end"]
 
 
-def test_installable_exception(event_thread: EventThread) -> None:
+def test_installable_exits_after_exception(event_thread: EventThread) -> None:
     installable = NullInstallable()
 
     with pytest.raises(Exception, match="test"), installable.install(event_thread):
@@ -39,6 +44,12 @@ def test_installable_exception(event_thread: EventThread) -> None:
 
     # Exception will not propagate to _install()
     assert installable.events == ["start", "end"]
+
+
+def test_faulty_installable(event_thread: EventThread) -> None:
+    installable = FaultyInstallable()
+    with pytest.raises(Exception, match="test"), installable.install(event_thread):
+        assert False, "Install exception did not propagate to caller"
 
 
 def test_repeat_installable(event_thread: EventThread) -> None:
