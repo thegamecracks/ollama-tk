@@ -1,3 +1,4 @@
+import concurrent.futures
 import contextlib
 import functools
 import logging
@@ -21,7 +22,7 @@ def suppress(*exceptions: type[BaseException]):
     return decorator
 
 
-@suppress(KeyboardInterrupt)
+@suppress(KeyboardInterrupt, concurrent.futures.CancelledError)
 def main() -> None:
     configure_logging()
     enable_windows_dpi_awareness()
