@@ -49,7 +49,7 @@ class Installable(ABC):
 
         def ready_callback() -> asyncio.Future[Any]:
             ready_fut.set_result(None)
-            return asyncio.wrap_future(stop_fut)
+            return asyncio.shield(asyncio.wrap_future(stop_fut))
 
         def cancel_task() -> None:
             nonlocal cancel_expected

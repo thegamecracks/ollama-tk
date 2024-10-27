@@ -1,4 +1,5 @@
 import asyncio
+import concurrent.futures
 from typing import Any, Callable
 
 import pytest
@@ -114,3 +115,12 @@ def test_double_install(event_thread: EventThread) -> None:
             with installable.install(event_thread):
                 assert False, "double install was not blocked"
     assert installable.events == ["start", "end"]
+
+
+def test_installable_cancel_propagation() -> None:
+    with EventThread() as event_thread:
+        with pytest.raises(concurrent.futures.CancelledError):
+            with NullInstallable().install(event_thread) as installable:
+                event_thread.stop()
+                event_thread.join(timeout=0.1)
+                assert not event_thread.is_alive()
