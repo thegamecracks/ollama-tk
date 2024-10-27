@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import platform
 from importlib.metadata import metadata
-from tkinter import Toplevel
 from tkinter.ttk import Frame, Label
 from typing import TYPE_CHECKING
 
+from .styling import Toplevel
 from .wrap_label import WrapLabel
 
 if TYPE_CHECKING:

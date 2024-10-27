@@ -2,12 +2,12 @@ import concurrent.futures
 import contextlib
 import functools
 import logging
-import sys
 
 from .app import TkApp
 from .event_thread import EventThread
 from .http import HTTPClient
 from .logging import configure_logging
+from .styling import apply_style, enable_windows_dpi_awareness
 
 
 def suppress(*exceptions: type[BaseException]):
@@ -32,6 +32,7 @@ def main() -> None:
     with event_thread, http.install(event_thread):
         app = TkApp(event_thread, http)
         app.listen_to_logs_from(logging.getLogger())
+        apply_style(app)
 
         try:
             app.mainloop()
@@ -39,13 +40,6 @@ def main() -> None:
             app.destroy()
             app.mainloop()
             raise
-
-
-def enable_windows_dpi_awareness() -> None:
-    if sys.platform == "win32":
-        from ctypes import windll
-
-        windll.shcore.SetProcessDpiAwareness(2)
 
 
 if __name__ == "__main__":

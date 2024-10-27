@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import logging
 from contextlib import contextmanager, nullcontext
-from tkinter import Text, Toplevel
+from tkinter import Text
 from tkinter.ttk import Button, Scrollbar
 from typing import TYPE_CHECKING, Any, Callable, Iterator, Literal, Self
+
+from .styling import Toplevel
 
 if TYPE_CHECKING:
     from .app import TkApp
